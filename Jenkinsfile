@@ -19,10 +19,12 @@ pipeline {
                 sh 'mvn package'
             }
         }
-        stage('Deploy') {
+        stage('Build And Push Image') {
             steps {
-                withEnv(['JENKINS_NODE_COOKIE=dontKillMe']){
-                    sh 'nohup java -jar -DServer.port=8001 target/employee-management-system-api-0.0.1-SNAPSHOT.jar &'
+                withCredentials([usernamePassword(credentialsId: 'docker_repository', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                  // available as an env variable, but will be masked if you try to print it out any which way
+                  // note: single quotes prevent Groovy interpolation; expansion is by Bourne Shell, which is what you want
+                  sh ' mvn jib:build -Djib.to.auth.username=$USERNAME -Djib.to.auth.password=$PASSWORD'
                 }
             }
         }
